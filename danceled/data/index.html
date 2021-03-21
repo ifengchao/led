@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>RGB</title>
+</head>
+
+<body>
+	<script>
+		function changeRGB(){
+			//alert(document.getElementById("color").value);
+			var color = document.getElementById("color").value;
+			document.getElementById("color_selected").value = color;
+			
+			var httpRequest = new XMLHttpRequest();
+			httpRequest.open('GET', '/changeColor?color='+color, true);
+			httpRequest.send();
+			
+			httpRequest.onreadystatechange = function () {
+				if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+					var json = httpRequest.responseText;//获取到json字符串，还需解析
+					console.log(json);
+				}
+			};
+		}
+		
+		function changeMode(){
+			var mode = document.getElementById("mode").value;
+			document.getElementById("mode_selected").value = mode;
+			var httpRequest = new XMLHttpRequest();
+			httpRequest.open('GET', '/changeMode?mode='+mode, true);
+			httpRequest.send();
+			
+			httpRequest.onreadystatechange = function () {
+				if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+					var json = httpRequest.responseText;//获取到json字符串，还需解析
+					console.log(json);
+				}
+			};
+		}
+		
+		function changeBrightness(){
+			var brightness = document.getElementById("brightness").value;
+			document.getElementById("brightness_selected").value = brightness;
+			var httpRequest = new XMLHttpRequest();
+			httpRequest.open('GET', '/changeBrightness?brightness='+brightness, true);
+			httpRequest.send();
+			
+			httpRequest.onreadystatechange = function () {
+				if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+					var json = httpRequest.responseText;//获取到json字符串，还需解析
+					console.log(json);
+				}
+			};
+		}
+	</script>
+	
+	<p> HSV 色彩<p>
+	0<input id="color" style="width: 320px;height:60px;" type="range" value="100" min="0" max="255" step="1" onchange="changeRGB()">255
+	<input id="color_selected" type="text" value="100" >
+	<p>
+	<p> 灯效切换<p>
+	0<input id="mode"style="width: 320px;height:60px;" type="range" value="1" min="0" max="6" step="1" onchange="changeMode()">6
+	<input id="mode_selected" type="text" value="1" >
+	<p>
+	<p> 亮度<p>
+	0<input id="brightness"style="width: 320px;height:60px;" type="range" value="100" min="0" max="255" step="5" onchange="changeBrightness()">255
+	<input id="brightness_selected" type="text" value="100" >
+	<p>
+	<p> 灵敏度<p>
+	100<input id="sensitivity"style="width: 320px;height:60px;" type="range" value="100" min="0" max="800" step="10" onchange="changeSense()">800
+	<input id="sense_selected" type="text" value="100" >
+</body>
+</html>

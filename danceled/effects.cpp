@@ -13,24 +13,67 @@
 Adafruit_NeoPixel pixels(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 CRGB leds[NUMPIXELS];            // 建立光带leds
 
-int effects = 0;
-
 unsigned long drop_time;//触发掉落时机
 
 double triger_line = 0.8;  //阈值
 int sig_max = 800;   //初始最大值
-int maxBrightness = 250;
+
 int si;
 int pre_si;
 
-int g_trigger_level = 200;    // 麦克风灵敏度，麦克风采样范围0-1024
-
+int g_trigger_level = 300;    // 麦克风灵敏度，麦克风采样范围0-1024
+int g_color = 255;              //起始颜色
+int maxBrightness = 250;      //最大亮度
+int effects = 0;              //默认灯效
+int brightness_delta = int(maxBrightness / NUMPIXELS);
+int color_delta = int(g_color / NUMPIXELS);
+  
 int drop_dot_color = 130;
 int drop_dot_brightness = 255;
 
 int set_brightness(int brightness){
-  //todo
+  Serial.printf("maxBrightness = %d\n",maxBrightness);
+  maxBrightness = brightness;
+  brightness_delta = maxBrightness / NUMPIXELS;
   return 0;  
+}
+
+int get_brightness(){
+  Serial.printf("maxBrightness = %d\n",maxBrightness);
+  return maxBrightness;
+}
+
+int get_trigger_level(){
+  Serial.printf("g_trigger_level = %d\n",g_trigger_level);
+  return g_trigger_level;
+}
+
+int set_trigger_level(int level){
+  Serial.printf("g_trigger_level = %d\n",g_trigger_level);
+  g_trigger_level = level;
+  return 0;  
+}
+
+int set_color(int color){
+  Serial.printf("g_color = %d\n",g_color);
+  g_color = color;
+  return 0;
+}
+
+int get_color(){
+  Serial.printf("g_color = %d\n",g_color);
+  return g_color;
+}
+
+int get_effects(){
+  Serial.printf("effects = %d\n",effects);
+  return effects;  
+}
+
+int set_effects( int effect){
+  Serial.printf("effects = %d\n",effects);
+  effects = effect;
+  return 0;
 }
 
 //上升，逐次点亮
@@ -86,9 +129,8 @@ int pre_drop_dot = 0;
 void music_pop(){
 
   int SEG_NUM = 10;
-  int SEG_MAX_BRIGHTNESS = 255;
-  int brightness_delta = SEG_MAX_BRIGHTNESS/SEG_NUM;
-  int color_delta = 255 /SEG_NUM;
+  int brightness_delta = maxBrightness/SEG_NUM;
+  int color_delta = g_color /SEG_NUM;
   int sig = analogRead(MIC_PIN);//out引脚
   int start_dot = 0;
   //int delta = int(250 / NUMPIXELS);
@@ -110,7 +152,7 @@ void music_pop(){
               fill_solid(leds+tmp_dot-SEG_NUM, 1, CHSV(0, 255, 0));
             }
             
-            fill_solid(leds+tmp_dot, 1, CHSV(i * color_delta, 255, i * brightness_delta));
+            fill_solid(leds+tmp_dot, 1, CHSV((g_color+i * color_delta)%255, 255, i * brightness_delta));
         }
         FastLED.show();
         delay(10);
@@ -126,8 +168,8 @@ long last_drop_time = 0;
 void music_extend(){
   
   int sig = analogRead(MIC_PIN);//out引脚
-  
-  int delta = int(250 / NUMPIXELS);
+
+  int delta = int(g_color / NUMPIXELS);
   //int delta = int(120 / NUMPIXELS);
   //int delta = random(0,250)/NUMPIXELS;//随机下颜色
   if (sig > sig_max)
@@ -144,7 +186,7 @@ void music_extend(){
       int m = si;
       for(int j = NUMPIXELS/2; m >= 0 && j >=0; j--, m--){        
           fill_solid(leds + j, 1, CHSV(j * delta, 255, j* delta));
-          fill_solid(leds + NUMPIXELS - j, 1, CHSV(j * delta, 255, j * delta));
+          fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * delta)%255, 255, j * brightness_delta));
           FastLED.show();          
           delay(10);
       }
@@ -191,7 +233,7 @@ void music_gathered(){
   int sig = analogRead(MIC_PIN);//out引脚
   
   //int delta = int(250 / NUMPIXELS);
-  int delta = int(120 / NUMPIXELS);
+  int delta = int(g_color / NUMPIXELS);
   //int delta = random(0,250)/NUMPIXELS;//随机下颜色
   if (sig > sig_max)
   {
@@ -206,8 +248,8 @@ void music_gathered(){
     if(si > pre_si){//音量更大
       int m = si;
       for(int j = 0; j <= si; j++){        
-          fill_solid(leds + j, 1, CHSV(j * delta, 255, (NUMPIXELS - j)* delta));
-          fill_solid(leds + NUMPIXELS - j, 1, CHSV(j * delta, 255, (NUMPIXELS - j) * delta));
+          fill_solid(leds + j, 1, CHSV((g_color+j * color_delta), 255, (NUMPIXELS - j)* brightness_delta));
+          fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * color_delta), 255, (NUMPIXELS - j) * brightness_delta));
           FastLED.show();          
           delay(10);
       }
@@ -249,7 +291,7 @@ void music_drop(){
         
   int sig = analogRead(MIC_PIN);//out引脚
   
-  int delta = int(250 / NUMPIXELS);
+  int delta = int(g_color / NUMPIXELS);
   //int delta = int(120 / NUMPIXELS);
   //int delta = random(0,250)/NUMPIXELS;//随机下颜色
   if (sig > sig_max)
@@ -308,7 +350,7 @@ void music_drop(){
       for(j = pre_si; j <= si; j++){
         //if(j < si)
         {          
-          fill_solid(leds + j, 1, CHSV(j * delta, 255, (NUMPIXELS-j) * delta));        
+          fill_solid(leds + j, 1, CHSV((g_color+j * color_delta)%255, 255, (NUMPIXELS-j) * brightness_delta));        
           //fill_solid(leds + j, 1, CHSV(j * delta, 255, maxBrightness));
           FastLED.show();          
           delay(5);
@@ -349,7 +391,7 @@ void music_RGB_drop(){
         
   int sig = analogRead(MIC_PIN);//out引脚
   
-  int delta = int(250 / NUMPIXELS);
+  int delta = int(g_color / NUMPIXELS);
   //int delta = int(120 / NUMPIXELS);
   //int delta = random(0,250)/NUMPIXELS;//随机下颜色
   if (sig > sig_max)
@@ -427,16 +469,6 @@ void music_RGB_drop(){
   delay(5);            
 }
 
-int get_effects(){
-  return effects;  
-}
-
-
-int set_effects( int effect){
-  effects = effect;
-  return 0;
-}
-
 /*
 音效描述：
 1）HUE 色, 2 个掉落效果点
@@ -445,7 +477,7 @@ void music_double_drop(){
        
   int sig = analogRead(MIC_PIN);//out引脚
   
-  int delta = int(250 / NUMPIXELS);
+  int delta = int(g_color / NUMPIXELS);
   //int delta = int(120 / NUMPIXELS);
   //int delta = random(0,250)/NUMPIXELS;//随机下颜色
   if (sig > sig_max)
@@ -487,8 +519,7 @@ void music_double_drop(){
       for(j = pre_si; j <= si; j++){
         //if(j < si)
         {          
-          fill_solid(leds + j, 1, CHSV(j * delta, 255, (NUMPIXELS-j) * delta));        
-          //fill_solid(leds + j, 1, CHSV(j * delta, 255, maxBrightness));
+          fill_solid(leds + j, 1, CHSV((g_color+j * delta)%255, 255, (NUMPIXELS-j) * brightness_delta));        
           FastLED.show();          
           delay(5);
         }
@@ -496,7 +527,7 @@ void music_double_drop(){
       pre_si = si;  
     }else{//音量变小
       for(int j = pre_si; j >= si && j > 0; j--){
-        fill_solid(leds + j, 1, CHSV(j * delta, 255, 0));
+        fill_solid(leds + j, 1, CHSV((g_color+j * delta)%255, 255, 0));
         FastLED.show();
         delay(10);
       }
@@ -532,7 +563,7 @@ void music_drop2(){
         
   int sig = analogRead(MIC_PIN);//out引脚
   
-  int delta = int(250 / NUMPIXELS);
+  int delta = int(g_color / NUMPIXELS);
   //int delta = int(120 / NUMPIXELS);
   //int delta = random(0,250)/NUMPIXELS;//随机下颜色
   if (sig > sig_max)

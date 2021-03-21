@@ -4,10 +4,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>RGB</title>
-</head>
-
-<body>
-	<script>
+<script>
+		function load()
+		{
+			var httpRequest = new XMLHttpRequest();
+			httpRequest.open('GET', '/getState', true);
+			httpRequest.send();
+			
+			httpRequest.onreadystatechange = function () {
+				if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+					var json = httpRequest.responseText;//获取到json字符串，还需解析
+					alert(json);
+					console.log(json);
+				}
+			};
+		}
+		
 		function changeRGB(){
 			//alert(document.getElementById("color").value);
 			var color = document.getElementById("color").value;
@@ -54,8 +66,26 @@
 				}
 			};
 		}
-	</script>
-	
+		
+		function changeSenseLevel(){
+			var level = document.getElementById("sensitivity").value;
+			document.getElementById("sense_selected").value = level;
+			var httpRequest = new XMLHttpRequest();
+			httpRequest.open('GET', '/changeTriggerLevel?level='+level, true);
+			httpRequest.send();
+			
+			httpRequest.onreadystatechange = function () {
+				if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+					var json = httpRequest.responseText;//获取到json字符串，还需解析
+					console.log(json);
+				}
+			};
+		}		
+</script>
+</head>
+
+<body onload="load()">
+
 	<p> HSV 色彩<p>
 	0<input id="color" style="width: 320px;height:60px;" type="range" value="100" min="0" max="255" step="1" onchange="changeRGB()">255
 	<input id="color_selected" type="text" value="100" >
@@ -69,7 +99,7 @@
 	<input id="brightness_selected" type="text" value="100" >
 	<p>
 	<p> 灵敏度<p>
-	100<input id="sensitivity"style="width: 320px;height:60px;" type="range" value="100" min="0" max="800" step="10" onchange="changeSense()">800
+	100<input id="sensitivity"style="width: 320px;height:60px;" type="range" value="100" min="0" max="800" step="10" onchange="changeSenseLevel()">800
 	<input id="sense_selected" type="text" value="100" >
 </body>
 </html>

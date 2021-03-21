@@ -117,6 +117,32 @@ int getEffectFromParams(const char *param)
 }
 
 void change_color(){
+  
+  String errorMessage = "Sent to lights!"; //lets set an error message to send if there's anything wrong.
+
+  Serial.println("Received Request:");
+
+  for (int i = 0; i < server.args(); i++)
+  {
+
+    const String arg = server.argName(i);
+    const char *param = server.arg(i).c_str();
+
+    //just for internal debugging
+    Serial.printf("%s:%s\n", arg.c_str(), param);
+
+    if (arg == "color")
+    {
+      int color = getEffectFromParams(param);
+      set_color(color);
+    }
+    else
+    {
+      Serial.printf("arg '%s' is not tied to any function", arg.c_str());
+    }
+  }
+
+  server.send(200, "text/plain", errorMessage);  
 }
 
 void change_mode(){
@@ -177,11 +203,48 @@ void change_brightness(){
   server.send(200, "text/plain", errorMessage);
 }
 
+void change_trigger_level(){
+  
+  String errorMessage = "Sent to lights!"; //lets set an error message to send if there's anything wrong.
+
+  Serial.println("Received Request:");
+
+  for (int i = 0; i < server.args(); i++)
+  {
+
+    const String arg = server.argName(i);
+    const char *param = server.arg(i).c_str();
+
+    //just for internal debugging
+    Serial.printf("%s:%s\n", arg.c_str(), param);
+
+    if (arg == "level")
+    {
+      int level = getEffectFromParams(param);
+      set_trigger_level(level);
+    }
+    else
+    {
+      Serial.printf("arg '%s' is not tied to any function\n", arg.c_str());
+    }
+  }
+
+  server.send(200, "text/plain", errorMessage);
+}
+
+void get_state(){
+    char errorMessage[1024] = "Sent to lights!";
+    snprintf(errorMessage, sizeof(errorMessage), "{\"Effects\":%d, \"maxBrightness\":%d, \"TriggerLevel\":%d, \"Color\":%d}", get_effects(), get_brightness(), get_trigger_level(), get_color());
+    server.send(200, "text/json", errorMessage);
+}
+
 void webserver_init(){
   //server.on("/", homepage);
+  server.on("/getState", get_state);
   server.on("/changeColor", change_color);
   server.on("/changeMode", change_mode);  
   server.on("/changeBrightness", change_brightness);
+  server.on("/changeTriggerLevel", change_trigger_level);
   server.onNotFound(searchFileSystem);
   server.begin();
 }

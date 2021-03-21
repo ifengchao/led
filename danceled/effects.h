@@ -38,4 +38,14 @@ int set_effects( int effect);
 
 int set_brightness(int brightness);
 
+int get_brightness();
+
+int get_trigger_level();
+
+int set_trigger_level(int level);
+
+int get_color();
+
+int set_color(int color);
+
 #endif

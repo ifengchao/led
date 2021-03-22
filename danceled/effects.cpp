@@ -184,8 +184,8 @@ void music_extend(){
     Serial.printf("si %d\n", si); 
     if(si > pre_si){//音量更大 
       int m = si;
-      for(int j = NUMPIXELS/2; m >= 0 && j >=0; j--, m--){        
-          fill_solid(leds + j, 1, CHSV((g_color+j * delta)%255, 255, (j+1) *2 * delta));//15 14 13
+      for(int j = NUMPIXELS/2; m >= 0 && j >=0; j--, m--){
+          fill_solid(leds + j, 1, CHSV((g_color+j * delta)%255, 255, (j+1) *2 * brightness_delta));//15 14 13
           fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * delta)%255, 255, (j+1)* 2 * brightness_delta));//15 16 17
           FastLED.show();          
           delay(10);

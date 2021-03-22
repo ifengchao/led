@@ -13,9 +13,21 @@
 			
 			httpRequest.onreadystatechange = function () {
 				if (httpRequest.readyState == 4 && httpRequest.status == 200) {
-					var json = httpRequest.responseText;//获取到json字符串，还需解析
-					alert(json);
+					var data = httpRequest.responseText;//获取到json字符串，还需解析
+					var json = eval('('+data+')');
+					//alert(json);
 					console.log(json);
+					document.getElementById("color").value = json.Color;
+					document.getElementById("color_selected").value = json.Color;
+					
+					document.getElementById("mode").value = json.Effects;
+					document.getElementById("mode_selected").value = json.Effects;
+					
+					document.getElementById("brightness").value = json.maxBrightness;
+					document.getElementById("brightness_selected").value = json.maxBrightness;
+					
+					document.getElementById("sensitivity").value = json.TriggerLevel;
+					document.getElementById("sense_selected").value = json.TriggerLevel;
 				}
 			};
 		}

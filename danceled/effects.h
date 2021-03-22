@@ -24,7 +24,7 @@ void music_extend();
 
 void music_gathered();
 
-void music_drop2();
+void music_up_down();
 
 void musicWrite3();
 

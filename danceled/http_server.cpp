@@ -1,9 +1,11 @@
 #include <ESP8266WebServer.h>
 #include <Arduino.h>
 #include "effects.h"
+#include <ArduinoJson.h>
 
 ESP8266WebServer server(80);
 
+#define CONFIG_PATH "/config.json"
 
 // -- Macro definitions -----------------
 #define PARAM_MATCH(str, retval) \
@@ -14,6 +16,44 @@ ESP8266WebServer server(80);
   if (filepath.endsWith(fp)) \
     return ret;
 
+    
+int read_config(){
+  if (SPIFFS.exists(CONFIG_PATH)){
+    File fp = SPIFFS.open(CONFIG_PATH, "r");
+    String settings = fp.readString();
+    Serial.println(settings);
+    
+    DynamicJsonDocument doc(1024);
+    deserializeJson(doc, settings);
+    JsonObject obj = doc.as<JsonObject>();
+
+    int effects = obj[String("Effects")];
+    int brightness = obj[String("maxBrightness")];
+    int TriggerLevel = obj[String("TriggerLevel")];
+    int maxColor = obj[String("Color")];
+
+    set_effects(effects);
+    set_brightness(brightness);
+    set_trigger_level(TriggerLevel);
+    set_color(maxColor);
+    
+    fp.close();
+  }  
+}
+
+int set_config(){
+  
+  if (SPIFFS.exists(CONFIG_PATH)){
+    
+    File fp = SPIFFS.open(CONFIG_PATH, "w");
+  
+    char settings[1024] = {0};
+    snprintf(settings, sizeof(settings), "{\"Effects\":%d, \"maxBrightness\":%d, \"TriggerLevel\":%d, \"Color\":%d}", get_effects(), get_brightness(), get_trigger_level(), get_color());
+    fp.write(settings, sizeof(settings));
+        
+    fp.close();
+  }  
+}
 
 String getFileContentType(String &filepath)
 {
@@ -105,6 +145,7 @@ void wifi_init(){
   WiFi.softAP("2021","88888888");
   WiFi.softAPConfig(local_IP, gateway, subnet);
   SPIFFS.begin();
+  read_config();
 }
 
 void webserver_handle(){
@@ -135,6 +176,7 @@ void change_color(){
     {
       int color = getEffectFromParams(param);
       set_color(color);
+      set_config();
     }
     else
     {
@@ -164,6 +206,7 @@ void change_mode(){
     {
       int effects = getEffectFromParams(param);
       set_effects(effects);
+      set_config();
     }
     else
     {
@@ -193,6 +236,7 @@ void change_brightness(){
     {
       int brightness = getEffectFromParams(param);
       set_brightness(brightness);
+      set_config();
     }
     else
     {
@@ -222,6 +266,7 @@ void change_trigger_level(){
     {
       int level = getEffectFromParams(param);
       set_trigger_level(level);
+      set_config();
     }
     else
     {

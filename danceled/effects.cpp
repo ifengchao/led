@@ -185,8 +185,8 @@ void music_extend(){
     if(si > pre_si){//音量更大 
       int m = si;
       for(int j = NUMPIXELS/2; m >= 0 && j >=0; j--, m--){        
-          fill_solid(leds + j, 1, CHSV(j * delta, 255, j* delta));
-          fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * delta)%255, 255, j * brightness_delta));
+          fill_solid(leds + j, 1, CHSV((g_color+j * delta)%255, 255, (j+1) *2 * delta));//15 14 13
+          fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * delta)%255, 255, (j+1)* 2 * brightness_delta));//15 16 17
           FastLED.show();          
           delay(10);
       }
@@ -559,7 +559,7 @@ void music_double_drop(){
 音效描述：
 1）HUE 色，上推+掉落效果
 */
-void music_drop2(){
+void music_up_down(){
         
   int sig = analogRead(MIC_PIN);//out引脚
   
@@ -576,47 +576,17 @@ void music_drop2(){
     //Serial.println(sig);
     int si = map(sig, g_trigger_level, sig_max, 0, NUMPIXELS);
     if(si > pre_si){//音量更大
-      int m =0;
       for(int j = 0; j < si; j++){
-        if(j < NUMPIXELS -3){
-          m++;
           //pixels.setPixelColor(j, pixels.Color(128, 128, 0));
           //pixels.show();
           //fill_solid(leds + j, 1, CHSV((NUMPIXELS-j) * delta, 255, maxBrightness));
           //fill_solid(leds + j, 1, CHSV(j * delta, 255, maxBrightness));
           Serial.printf("j %d", j); 
-          fill_solid(leds + j, 1, CHSV(j * delta, 255, (NUMPIXELS-j) * delta));
-          
-          FastLED.show();
-          
+          fill_solid(leds + j, 1, CHSV((g_color+j * color_delta)%255, 255, (NUMPIXELS-j) * brightness_delta));          
+          FastLED.show();          
           delay(1);
-        }
       }
-      
-      //if(drop_dot < m)// 不影响上次继续掉落，如果这次音量最大值没有达到上次掉落的最后值
-      { 
-        drop_dot = m;
-        
-        for(int i = 0;i < 2; i ++){
-          
-          drop_dot ++;
-          if(pre_drop_dot){
-              //pixels.setPixelColor(pre_drop_dot, pixels.Color(0, 0, 0));
-              Serial.printf("pre_drop %d", pre_drop_dot); 
-              fill_solid(leds + pre_drop_dot, 1, CHSV(drop_dot_color, 255, 0));
-              FastLED.show();
-            }
-          Serial.println(drop_dot);  
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness/(2-i)));
-          FastLED.show();
-          //pixels.setPixelColor(drop_dot, pixels.Color(255, 0, 0));
-          //pixels.show();
-          pre_drop_dot = drop_dot;
-         
-          delay(10);
-        }  
-      }
-      
+           
       pre_si = si;  
     }else{//音量变小
       for(int j = pre_si; j >= si; j--){
@@ -628,31 +598,6 @@ void music_drop2(){
       }
       pre_si = si; 
     }
-  }else{  //继续上次
-      //继续掉落
-      //for(int i = 0;drop_dot >= si; i ++)
-      unsigned long interval = map(pre_si - si, 0, 31, 100, 10);//取20-300ms的掉落速度，两次音量落差越大，降速越快
-      if(millis() - drop_time > interval)//掉落间隔
-      {
-        drop_dot --;
-        
-        if(pre_drop_dot>=0)
-          //pixels.setPixelColor(pre_drop_dot, pixels.Color(0, 0, 0));
-        {
-          fill_solid(leds + pre_drop_dot, 1, CHSV(130, 255, 0));
-          FastLED.show();
-        }
-        
-        if(drop_dot>=0){
-          //pixels.setPixelColor(drop_dot, pixels.Color(255, 0, 0));
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
-          FastLED.show();
-          pre_drop_dot = drop_dot;
-        }
-        //pixels.show();
-        //delay(1);
-        drop_time = millis();
-      }
   }
   delay(5);          
 }

@@ -48,7 +48,7 @@ void loop()
         music_gathered();
         break;
     case 6:
-        music_drop2();
+        music_up_down();
         break;        
         
     default:

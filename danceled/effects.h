@@ -26,6 +26,8 @@ void music_gathered();
 
 void music_up_down();
 
+void music_fade();
+void music_fade_single_color();
 void musicWrite3();
 
 void musicWrite2();

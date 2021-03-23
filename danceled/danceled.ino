@@ -49,7 +49,13 @@ void loop()
         break;
     case 6:
         music_up_down();
-        break;        
+        break;
+    case 7:
+        music_fade();
+        break;
+    case 8:
+        music_fade_single_color();
+        break;
         
     default:
       break;

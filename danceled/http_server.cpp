@@ -142,7 +142,7 @@ IPAddress subnet(255,255,255,0); //手动设置的子网掩码
 
 void wifi_init(){
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("2021","88888888");
+  WiFi.softAP("2021","88888888",1,0,4);
   WiFi.softAPConfig(local_IP, gateway, subnet);
   SPIFFS.begin();
   read_config();

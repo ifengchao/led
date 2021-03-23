@@ -57,6 +57,7 @@ int set_trigger_level(int level){
 int set_color(int color){
   Serial.printf("g_color = %d\n",g_color);
   g_color = color;
+  color_delta = int(g_color / NUMPIXELS);
   return 0;
 }
 
@@ -66,7 +67,7 @@ int get_color(){
 }
 
 int get_effects(){
-  Serial.printf("effects = %d\n",effects);
+  //Serial.printf("effects = %d\n",effects);
   return effects;  
 }
 
@@ -186,7 +187,7 @@ void music_extend(){
       int m = si;
       for(int j = NUMPIXELS/2; m >= 0 && j >=0; j--, m--){
           fill_solid(leds + j, 1, CHSV((g_color+j * delta)%255, 255, (j+1) *2 * brightness_delta));//15 14 13
-          fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * delta)%255, 255, (j+1)* 2 * brightness_delta));//15 16 17
+          fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * delta)%255, 255, j* 2 * brightness_delta));//15 16 17
           FastLED.show();          
           delay(10);
       }
@@ -386,6 +387,133 @@ void music_drop(){
   }
   delay(5);          
 }
+
+int last_brightness = 0;
+int last_color = 0;
+
+/*
+音效描述：
+1）HUE 色，变色+亮度渐变
+*/
+void music_fade(){
+        
+  int sig = analogRead(MIC_PIN);//out引脚
+
+  int delta = int(g_color / NUMPIXELS);
+  //int delta = int(120 / NUMPIXELS);
+  //int delta = random(0,250)/NUMPIXELS;//随机下颜色
+  if (sig > sig_max)
+  {
+    sig = sig_max;// 防止超范围
+  }
+
+  if (sig >= g_trigger_level)
+  { 
+    //Serial.println(sig);
+    int si = map(sig, g_trigger_level, sig_max, 0, NUMPIXELS-1);
+    if(si > pre_si){//音量更大
+      int j = 0;
+      for(j = pre_si; j <= si; j++){
+          fill_solid(leds, NUMPIXELS, CHSV((g_color+j * color_delta)%255, 255, j*brightness_delta));
+          FastLED.show();
+          delay(5);
+      }  
+      last_brightness = (j-1)*brightness_delta;
+      last_color = (j-1) * delta;
+      pre_si = si;
+    }else{//音量变小
+      int j = 0;
+      for(j = pre_si; j >= si && j > 0; j--){
+        fill_solid(leds, NUMPIXELS, CHSV(j * delta, 255, j*brightness_delta));
+        FastLED.show();
+        delay(5);
+      }
+      last_color = (j-1) * delta;
+      last_brightness = (j-1)*brightness_delta;
+      pre_si = si; 
+    }
+  }
+  
+  {//一直fade
+      //for(int i = 0;drop_dot >= si; i ++)
+      unsigned long interval = map(pre_si - si, 0, 31, 800, 5);//取5-100ms的掉落速度，两次音量落差越大，降速越快
+      //Serial.printf("last_color %ld,%ld\n",last_color,drop_time); 
+      if(millis() - drop_time > 200)//掉落间隔
+      {
+        if(last_brightness>0)
+        {
+          fill_solid(leds, NUMPIXELS, CHSV(last_color, 255, last_brightness-=brightness_delta));
+          FastLED.show();
+        }
+        
+        drop_time = millis();
+      }
+  }
+  delay(5);          
+}
+
+/*
+音效描述：
+1）HUE 色，单色+亮度渐变
+*/
+void music_fade_single_color(){
+        
+  int sig = analogRead(MIC_PIN);//out引脚
+
+  //int delta = int(g_color / NUMPIXELS);
+  //int delta = int(120 / NUMPIXELS);
+  //int delta = random(0,250)/NUMPIXELS;//随机下颜色
+  if (sig > sig_max)
+  {
+    sig = sig_max;// 防止超范围
+  }
+
+  if (sig >= g_trigger_level)
+  { 
+    //Serial.println(sig);
+    int si = map(sig, g_trigger_level, sig_max, 0, NUMPIXELS-1);
+    if(si > pre_si){//音量更大
+      int j = 0;
+      for(j = 0; j <= si; j++){
+          fill_solid(leds, NUMPIXELS, CHSV(g_color, 255, j*brightness_delta));
+          FastLED.show();
+          delay(5);
+      }  
+      last_brightness = (j-1)*brightness_delta;
+      //last_color = (j-1) * delta;
+      pre_si = si;
+    }else{//音量变小
+      int j = 0;
+      for(j = pre_si; j >= si && j > 0; j--){
+        fill_solid(leds, NUMPIXELS, CHSV(g_color, 255, j*brightness_delta));
+        FastLED.show();
+        delay(5);
+      }
+      //last_color = (j-1) * delta;
+      last_brightness = (j-1)*brightness_delta;
+      pre_si = si; 
+      drop_time = millis();
+    }
+  }
+  
+  {//一直fade
+      //for(int i = 0;drop_dot >= si; i ++)
+      unsigned long interval = map(pre_si - si, 0, 31, 800, 5);//取5-100ms的掉落速度，两次音量落差越大，降速越快
+      //Serial.printf("last_color %ld,%ld\n",last_color,drop_time); 
+      if(millis() - drop_time > 10)//掉落间隔
+      {
+        if(last_brightness>0)
+        {
+          fill_solid(leds, NUMPIXELS, CHSV(g_color, 255, last_brightness--));
+          FastLED.show();
+        }
+        
+        drop_time = millis();
+      }
+  }
+  delay(5);          
+}
+
 
 void music_RGB_drop(){
         

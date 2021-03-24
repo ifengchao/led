@@ -16,6 +16,8 @@ void music_pop();
 */
 void music_drop();
 
+void music_dance();
+
 void music_RGB_drop();
 
 void music_double_drop();

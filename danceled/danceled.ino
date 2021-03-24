@@ -56,7 +56,9 @@ void loop()
     case 8:
         music_fade_single_color();
         break;
-        
+    case 9:
+        music_dance();
+        break;        
     default:
       break;
   }

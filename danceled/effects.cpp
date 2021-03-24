@@ -162,6 +162,7 @@ void music_pop(){
 }
 
 int start_dot = 12;
+
 /*
 音效描述：
 1）HUE 色，段落跳跃模式
@@ -194,19 +195,20 @@ void music_dance(){
       Serial.printf("move_step %d\n",move_step);      
       
       for(int y = 0; y < move_step; y++){
-          // 关掉要移动的几个点
+          // 关掉上次开始位置 要移动的几个点
          fill_solid(leds+(start_dot+y)%NUMPIXELS, 1, CHSV(0, 255, 0));
-         FastLED.show();
-         delay(10);
+         
       }
-      if(start_dot+move_step < NUMPIXELS-SEG_NUM){
+      FastLED.show();
+      delay(30);
+      if(start_dot+move_step <= NUMPIXELS-SEG_NUM){
         start_dot += move_step;
       
         for(int x = 0; x < SEG_NUM; x++){     
             fill_solid(leds+(start_dot+x)%NUMPIXELS, 1, CHSV((g_color+x * color_delta)%255, 255, x * brightness_delta));
         }
         FastLED.show();
-        delay(10);
+        delay(30);
     
         start_dot = start_dot % NUMPIXELS;
         Serial.printf("start_dot %d\n",start_dot);
@@ -218,22 +220,102 @@ void music_dance(){
          for(int y = 0; y < move_step; y++){
           // 关掉要移动的几个点
          fill_solid(leds+(start_dot+SEG_NUM-y)%NUMPIXELS, 1, CHSV(0, 255, 0));
-         FastLED.show();
-         delay(10);
+
       }    
-     
-      if(start_dot - move_step >0){
+      FastLED.show();
+      delay(30);
+      
+      if(start_dot - move_step >=0){
         start_dot -= move_step;
       
           for(int x = 0; x < SEG_NUM; x++){     
               fill_solid(leds+(start_dot+x)%NUMPIXELS, 1, CHSV((g_color+x * color_delta)%255, 255, x * brightness_delta));
           }
           FastLED.show();
-          delay(10); 
+          delay(30); 
           start_dot = start_dot % NUMPIXELS;
      
      }
       
+            
+      Serial.printf("start_dot %d\n",start_dot);
+      pre_si = si;
+    }
+      
+  } 
+ 
+}
+/*
+音效描述：
+1）HUE 色，段落跳跃模式，单色模式
+*/
+void music_dance_single_color(){
+
+  int SEG_NUM = 8;
+  int brightness_delta = maxBrightness/SEG_NUM;
+  int color_delta = g_color /SEG_NUM;
+  int sig = analogRead(MIC_PIN);//out引脚
+
+  int delta = random(0,250)/NUMPIXELS;//随机下颜色
+  //Serial.println(sig);
+  int trigger = 50;
+  if (sig >= 400 && sig - 400 > trigger ){
+    si = sig - 400;
+    Serial.printf("up %d\n",sig - 400);
+  }else if(sig <= 400 && 400 - sig > trigger){
+    si = 400 - sig;
+    Serial.printf("down %d\n",400 - sig);
+  }else{
+    si = 0;  
+  }
+
+  if(si > trigger){
+    
+    if(si > pre_si){// 声音增大
+  
+      int move_step = map(si, 0, 200, 0, SEG_NUM);//15 步
+      Serial.printf("move_step %d\n",move_step);      
+      
+      for(int y = 0; y < move_step; y++){
+          // 关掉上次开始位置 要移动的几个点
+         fill_solid(leds+(start_dot+y)%NUMPIXELS, 1, CHSV(0, 255, 0));
+         
+      }
+      FastLED.show();
+      delay(30);
+      if(start_dot+move_step <= NUMPIXELS-SEG_NUM){
+        start_dot += move_step;
+      
+        for(int x = 0; x < SEG_NUM; x++){     
+            fill_solid(leds+(start_dot+x)%NUMPIXELS, 1, CHSV(g_color, 255, x * brightness_delta));
+        }
+        FastLED.show();
+        delay(30);
+    
+        start_dot = start_dot % NUMPIXELS;
+        Serial.printf("start_dot %d\n",start_dot);
+      }    
+      
+      pre_si = si;
+    }else{  //声音变小
+      int move_step = map(si, 0, 200, 0, SEG_NUM);//15 步
+         for(int y = 0; y < move_step; y++){
+          // 关掉上次开始位置 要移动的几个点
+         fill_solid(leds+(start_dot+SEG_NUM-y)%NUMPIXELS, 1, CHSV(0, 255, 0));
+      }    
+      FastLED.show();
+      delay(30);
+      
+      if(start_dot - move_step >=0){
+        start_dot -= move_step;
+      
+          for(int x = 0; x < SEG_NUM; x++){     
+              fill_solid(leds+(start_dot+x)%NUMPIXELS, 1, CHSV(g_color, 255, x * brightness_delta));
+          }
+          FastLED.show();
+          delay(30); 
+          start_dot = start_dot % NUMPIXELS;
+     }     
             
       Serial.printf("start_dot %d\n",start_dot);
       pre_si = si;

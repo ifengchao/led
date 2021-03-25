@@ -18,6 +18,8 @@ void music_drop();
 
 void music_dance();
 
+void music_dot_dance();
+
 void music_dance_single_color();
 
 void music_RGB_drop();

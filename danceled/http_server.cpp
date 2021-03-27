@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "effects.h"
 #include <ArduinoJson.h>
+#include <FS.h>
 
 ESP8266WebServer server(80);
 

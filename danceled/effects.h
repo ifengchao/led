@@ -9,7 +9,7 @@ void led_init();
 1）HUE 色，气泡模式，气泡上升亮度和颜色渐变
 */
 void music_pop();
-
+void led_test();
 /*
 音效描述：
 1）HUE 色，掉落效果

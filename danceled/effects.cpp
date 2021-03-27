@@ -126,6 +126,35 @@ int drop_dot = 0;
 int drop_dot2 = 1;
 int pre_drop_dot = 0;
 
+void led_test(){
+  int delta = int(250 / NUMPIXELS);
+  int j = 0;
+  for (j = 0; j < NUMPIXELS; j++)
+  {
+    pixels.setPixelColor(j, pixels.Color(delta * j, 0, 255 - delta * j));
+    //pixels.setPixelColor(j, pixels.Color(250, 0, 0));
+    pixels.show();
+    delay(5);//点亮速度，上升速度
+    //delay(delay_time); ///
+  }
+  Serial.printf("maxBrightness = %d\n",maxBrightness);
+  //pixels.clear();
+  //pixels.show();
+  //delay(300);
+
+  for ( j; j >= 0; j--)
+  {
+    pixels.setPixelColor(j, pixels.Color(0, 0, 0));
+    //pixels.setPixelColor(j, pixels.Color(250, 0, 0));
+    pixels.show();
+    delay(8);//灭灯速度
+    //delay(delay_time); ///
+  }
+  pixels.clear();
+  pixels.show();
+  delay(100);  
+}
+
 /*
 音效描述：
 1）HUE 色，气泡模式，气泡上升亮度和颜色渐变

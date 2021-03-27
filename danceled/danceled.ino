@@ -1,5 +1,5 @@
 #include <ESP8266WiFi.h>
-#include <FS.h>
+
 #include "http_server.h"
 #include "effects.h"
 
@@ -64,7 +64,11 @@ void loop()
         break;
     case 11:
         music_dot_dance();
-        break;        
+        break;  
+    case 12:
+      led_test();      
+      break;
+      
     default:
       break;
   }

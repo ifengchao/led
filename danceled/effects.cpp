@@ -4,7 +4,8 @@
 
 #define LED_PIN    2   //灯带信号--引脚6
 #define MIC_PIN    A0  //MAX9814 OUT引脚
-#define NUMPIXELS 30      //灯数
+#define NUMPIXELS 32
+//灯数
 #define delay_time 20      //闪灯间隔
 #define SEG_4_NUM   4
 
@@ -125,6 +126,11 @@ void  led_init(){
 int drop_dot = 0;
 int drop_dot2 = 1;
 int pre_drop_dot = 0;
+
+void clear_led(){
+  pixels.clear();
+  pixels.show();  
+}
 
 void led_test(){
   int delta = int(250 / NUMPIXELS);
@@ -273,7 +279,6 @@ void music_dot_dance(){
   } 
  
 }
-
 
 
 /*
@@ -592,7 +597,7 @@ void music_drop(){
           if(pre_drop_dot != drop_dot){
             fill_solid(leds + pre_drop_dot, 1, CHSV(drop_dot_color, 255, 0));
           }
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
           FastLED.show();
           //drop_time = millis();
         }
@@ -650,7 +655,7 @@ void music_drop(){
         if(drop_dot>0)
         {
           fill_solid(leds + drop_dot--, 1, CHSV(130, 255, 0));
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
           FastLED.show();
           Serial.printf("drop_dot %d\n", drop_dot); 
         }
@@ -905,8 +910,8 @@ void music_double_drop(){
           if(pre_drop_dot != drop_dot){
             fill_solid(leds + pre_drop_dot, 1, CHSV(drop_dot_color, 255, 0));
           }
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
-          fill_solid(leds + drop_dot2, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));          
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
+          fill_solid(leds + drop_dot2, 1, CHSV(drop_dot_color, 255, maxBrightness));          
           
           FastLED.show();
           drop_time = millis();
@@ -944,9 +949,9 @@ void music_double_drop(){
         if(drop_dot>0)
         {
           fill_solid(leds + drop_dot--, 1, CHSV(130, 255, 0));
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
           fill_solid(leds + drop_dot2--, 1, CHSV(130, 255, 0));
-          fill_solid(leds + drop_dot2, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
+          fill_solid(leds + drop_dot2, 1, CHSV(drop_dot_color, 255, maxBrightness));
           FastLED.show();
         }
         pre_drop_dot = drop_dot;

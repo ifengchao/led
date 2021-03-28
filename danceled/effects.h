@@ -4,6 +4,8 @@
 #include <Arduino.h>
 
 void led_init();
+void clear_led();
+
 /*
 音效描述：
 1）HUE 色，气泡模式，气泡上升亮度和颜色渐变

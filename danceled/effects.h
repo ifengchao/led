@@ -4,12 +4,14 @@
 #include <Arduino.h>
 
 void led_init();
+void clear_led();
+
 /*
 音效描述：
 1）HUE 色，气泡模式，气泡上升亮度和颜色渐变
 */
 void music_pop();
-
+void led_test();
 /*
 音效描述：
 1）HUE 色，掉落效果
@@ -17,6 +19,8 @@ void music_pop();
 void music_drop();
 
 void music_dance();
+
+void music_dot_dance();
 
 void music_dance_single_color();
 

@@ -16,7 +16,7 @@ void setup() {
   webserver_init();
 
 }
-
+int last_effects = 0;
 void loop()
 {
   //dance1();
@@ -28,6 +28,10 @@ void loop()
   //music_double_drop();
   //music_extend();
   int effects = get_effects();
+  if(effects != last_effects){
+    clear_led();  
+  }
+  
   switch(effects){
     case 0:
         music_drop();
@@ -62,9 +66,17 @@ void loop()
     case 10:
         music_dance_single_color();
         break;
+    case 11:
+        music_dot_dance();
+        break;  
+    case 12:
+      led_test();      
+      break;
+      
     default:
       break;
   }
+  last_effects = effects;
   
   //监听网页请求并处理
   webserver_handle();

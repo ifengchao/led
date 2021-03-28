@@ -4,8 +4,10 @@
 
 #define LED_PIN    2   //灯带信号--引脚6
 #define MIC_PIN    A0  //MAX9814 OUT引脚
-#define NUMPIXELS 30      //灯数
+#define NUMPIXELS 32
+//灯数
 #define delay_time 20      //闪灯间隔
+#define SEG_4_NUM   4
 
 #define COLOR_ORDER GRB    // 色序
 #define LED_TYPE WS2812    // LED灯带型号
@@ -30,6 +32,8 @@ int color_delta = int(g_color / NUMPIXELS);
   
 int drop_dot_color = 130;
 int drop_dot_brightness = 255;
+int start_dot = NUMPIXELS/2-3;
+
 
 int set_brightness(int brightness){
   Serial.printf("maxBrightness = %d\n",maxBrightness);
@@ -123,6 +127,40 @@ int drop_dot = 0;
 int drop_dot2 = 1;
 int pre_drop_dot = 0;
 
+void clear_led(){
+  pixels.clear();
+  pixels.show();  
+}
+
+void led_test(){
+  int delta = int(250 / NUMPIXELS);
+  int j = 0;
+  for (j = 0; j < NUMPIXELS; j++)
+  {
+    pixels.setPixelColor(j, pixels.Color(delta * j, 0, 255 - delta * j));
+    //pixels.setPixelColor(j, pixels.Color(250, 0, 0));
+    pixels.show();
+    delay(5);//点亮速度，上升速度
+    //delay(delay_time); ///
+  }
+  Serial.printf("maxBrightness = %d\n",maxBrightness);
+  //pixels.clear();
+  //pixels.show();
+  //delay(300);
+
+  for ( j; j >= 0; j--)
+  {
+    pixels.setPixelColor(j, pixels.Color(0, 0, 0));
+    //pixels.setPixelColor(j, pixels.Color(250, 0, 0));
+    pixels.show();
+    delay(8);//灭灯速度
+    //delay(delay_time); ///
+  }
+  pixels.clear();
+  pixels.show();
+  delay(100);  
+}
+
 /*
 音效描述：
 1）HUE 色，气泡模式，气泡上升亮度和颜色渐变
@@ -161,7 +199,87 @@ void music_pop(){
   }
 }
 
-int start_dot = 12;
+/*
+音效描述：
+1）HUE 色，4点跳跃模式
+*/
+void music_dot_dance(){
+
+  int SEG_NUM = 8;
+  int brightness_delta = maxBrightness/SEG_4_NUM;
+  int color_delta = g_color /SEG_NUM;
+  int sig = analogRead(MIC_PIN);//out引脚
+
+  int delta = random(0,250)/NUMPIXELS;//随机下颜色
+  //Serial.println(sig);
+  int trigger = g_trigger_level/5;//灵敏度
+  if (sig >= 400 && sig - 400 > trigger ){
+    si = sig - 400;
+    Serial.printf("up %d\n",sig - 400);
+  }else if(sig <= 400 && 400 - sig > trigger){
+    si = 400 - sig;
+    Serial.printf("down %d\n",400 - sig);
+  }else{
+    si = 0;  
+  }
+
+  if(si > trigger){
+    
+    if(si > pre_si){// 声音增大
+  
+      int move_step = map(si, 0, 200, 0, SEG_4_NUM);//15 步
+      Serial.printf("move_step %d\n",move_step);      
+      
+      for(int y = 0; y < move_step; y++){
+          // 关掉上次开始位置 要移动的几个点
+         fill_solid(leds+(start_dot+y)%NUMPIXELS, 1, CHSV(0, 255, 0));         
+      }
+      FastLED.show();
+      delay(50);
+      if(start_dot+move_step <= NUMPIXELS-SEG_4_NUM){
+        start_dot += move_step;
+      
+        for(int x = 0; x < SEG_4_NUM; x++){     
+            //fill_solid(leds+(start_dot+x)%NUMPIXELS, 1, CHSV((g_color+x * color_delta)%255, 255, x * brightness_delta));
+            fill_solid(leds+(start_dot+x)%NUMPIXELS, 1, CHSV(g_color, 255, (x+1) * brightness_delta));
+        }
+        FastLED.show();
+        delay(50);
+    
+        start_dot = start_dot % NUMPIXELS;
+        Serial.printf("start_dot %d\n",start_dot);
+      }    
+      
+      pre_si = si;
+    }else{  //声音变小
+      int move_step = map(si, 0, 200, 0, SEG_4_NUM);//15 步
+         for(int y = 0; y < move_step; y++){
+          // 关掉要移动的几个点
+         fill_solid(leds+(start_dot+SEG_4_NUM-y)%NUMPIXELS, 1, CHSV(0, 255, 0));
+      }    
+      FastLED.show();
+      delay(50);
+      
+      if(start_dot - move_step >=0){
+        start_dot -= move_step;
+      
+          for(int x = 0; x < SEG_4_NUM; x++){     
+              //fill_solid(leds+(start_dot+x)%NUMPIXELS, 1, CHSV((g_color+x * color_delta)%255, 255, (SEG_4_NUM-x) * brightness_delta));
+              fill_solid(leds+(start_dot+x)%NUMPIXELS, 1, CHSV(g_color, 255, (SEG_4_NUM-x) * brightness_delta));
+          }
+          FastLED.show();
+          delay(50); 
+          start_dot = start_dot % NUMPIXELS;     
+     }     
+            
+      Serial.printf("start_dot %d\n",start_dot);
+      pre_si = si;
+    }
+      
+  } 
+ 
+}
+
 
 /*
 音效描述：
@@ -233,11 +351,8 @@ void music_dance(){
           }
           FastLED.show();
           delay(30); 
-          start_dot = start_dot % NUMPIXELS;
-     
+          start_dot = start_dot % NUMPIXELS;     
      }
-      
-            
       Serial.printf("start_dot %d\n",start_dot);
       pre_si = si;
     }
@@ -482,7 +597,7 @@ void music_drop(){
           if(pre_drop_dot != drop_dot){
             fill_solid(leds + pre_drop_dot, 1, CHSV(drop_dot_color, 255, 0));
           }
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
           FastLED.show();
           //drop_time = millis();
         }
@@ -540,7 +655,7 @@ void music_drop(){
         if(drop_dot>0)
         {
           fill_solid(leds + drop_dot--, 1, CHSV(130, 255, 0));
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
           FastLED.show();
           Serial.printf("drop_dot %d\n", drop_dot); 
         }
@@ -795,8 +910,8 @@ void music_double_drop(){
           if(pre_drop_dot != drop_dot){
             fill_solid(leds + pre_drop_dot, 1, CHSV(drop_dot_color, 255, 0));
           }
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
-          fill_solid(leds + drop_dot2, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));          
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
+          fill_solid(leds + drop_dot2, 1, CHSV(drop_dot_color, 255, maxBrightness));          
           
           FastLED.show();
           drop_time = millis();
@@ -834,9 +949,9 @@ void music_double_drop(){
         if(drop_dot>0)
         {
           fill_solid(leds + drop_dot--, 1, CHSV(130, 255, 0));
-          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
           fill_solid(leds + drop_dot2--, 1, CHSV(130, 255, 0));
-          fill_solid(leds + drop_dot2, 1, CHSV(drop_dot_color, 255, drop_dot_brightness));
+          fill_solid(leds + drop_dot2, 1, CHSV(drop_dot_color, 255, maxBrightness));
           FastLED.show();
         }
         pre_drop_dot = drop_dot;

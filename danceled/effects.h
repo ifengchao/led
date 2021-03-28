@@ -17,7 +17,7 @@ void led_test();
 1）HUE 色，掉落效果
 */
 void music_drop();
-
+void music_drop_pro();
 void music_dance();
 
 void music_dot_dance();

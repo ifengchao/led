@@ -137,13 +137,13 @@ void handleNotFound() {
   server.send(404, "text/plain", "404: Not found");
 }
 
-IPAddress local_IP(192,168,4,1);//手动设置的开启的网络的ip地址
-IPAddress gateway(192,168,4,1);  //手动设置的网关IP地址
+IPAddress local_IP(4,3,2,1);//手动设置的开启的网络的ip地址
+IPAddress gateway(4,3,2,1);  //手动设置的网关IP地址
 IPAddress subnet(255,255,255,0); //手动设置的子网掩码
 
 void wifi_init(){
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("2021","88888888",1,0,4);
+  WiFi.softAP("8888","88888888",1,0,4);
   WiFi.softAPConfig(local_IP, gateway, subnet);
   SPIFFS.begin();
   read_config();

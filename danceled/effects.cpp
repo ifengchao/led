@@ -2,7 +2,7 @@
 #include <FastLED.h>
 #include <Arduino.h>
 
-#define LED_PIN    2   //灯带信号--引脚6
+#define LED_PIN    5   //灯带信号--引脚6
 #define MIC_PIN    A0  //MAX9814 OUT引脚
 #define NUMPIXELS 32
 //灯数
@@ -17,7 +17,6 @@ CRGB leds[NUMPIXELS];            // 建立光带leds
 
 unsigned long drop_time;//触发掉落时机
 
-double triger_line = 0.8;  //阈值
 int sig_max = 800;   //初始最大值
 
 int si;
@@ -81,19 +80,29 @@ int set_effects( int effect){
   return 0;
 }
 
+void led_test(){
+  
+  fill_rainbow(leds, 32, 0, 5);
+  FastLED.show();
+  delay(1000);
+  FastLED.clear(); 
+  FastLED.show(); 
+}
+
 //上升，逐次点亮
 void  led_init(){
-  
+  // LED init
+  LEDS.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUMPIXELS);
+  FastLED.setBrightness(maxBrightness);  
+  led_test();
 #if 1  
   pixels.begin();           // INITIALIZE NeoPixel pixels object (REQUIRED)
   pixels.clear();
   pixels.show();            // Turn OFF all pixels ASAP
   pixels.setBrightness(150); // Set BRIGHTNESS to about 1/5 (max = 255)
 #endif
-  // LED init
-  LEDS.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUMPIXELS);
-  FastLED.setBrightness(maxBrightness);  
 
+#if 0
   int delta = int(250 / NUMPIXELS);
   int j = 0;
   for (j = 0; j < NUMPIXELS; j++)
@@ -119,6 +128,7 @@ void  led_init(){
   }
   pixels.clear();
   pixels.show();
+#endif  
   delay(100);  
 
 }
@@ -128,37 +138,10 @@ int drop_dot2 = 1;
 int pre_drop_dot = 0;
 
 void clear_led(){
-  pixels.clear();
-  pixels.show();  
-}
-
-void led_test(){
-  int delta = int(250 / NUMPIXELS);
-  int j = 0;
-  for (j = 0; j < NUMPIXELS; j++)
-  {
-    pixels.setPixelColor(j, pixels.Color(delta * j, 0, 255 - delta * j));
-    //pixels.setPixelColor(j, pixels.Color(250, 0, 0));
-    pixels.show();
-    delay(5);//点亮速度，上升速度
-    //delay(delay_time); ///
-  }
-  Serial.printf("maxBrightness = %d\n",maxBrightness);
   //pixels.clear();
   //pixels.show();
-  //delay(300);
-
-  for ( j; j >= 0; j--)
-  {
-    pixels.setPixelColor(j, pixels.Color(0, 0, 0));
-    //pixels.setPixelColor(j, pixels.Color(250, 0, 0));
-    pixels.show();
-    delay(8);//灭灯速度
-    //delay(delay_time); ///
-  }
-  pixels.clear();
-  pixels.show();
-  delay(100);  
+  FastLED.clear();
+  FastLED.show();
 }
 
 /*
@@ -194,7 +177,7 @@ void music_pop(){
             fill_solid(leds+tmp_dot, 1, CHSV((g_color+i * color_delta)%255, 255, i * brightness_delta));
         }
         FastLED.show();
-        delay(10);
+        delay(20);
     }
   }
 }
@@ -278,6 +261,107 @@ void music_dot_dance(){
       
   } 
  
+}
+
+/*
+音效描述：
+1）HUE 色，上推+掉落效果
+*/
+void music_drop_pro(){
+        
+  int sig = analogRead(MIC_PIN);//out引脚
+  
+  int delta = int(g_color / NUMPIXELS);
+  //int delta = int(120 / NUMPIXELS);
+  //int delta = random(0,250)/NUMPIXELS;//随机下颜色
+  if (sig > sig_max)
+  {
+    sig = sig_max;// 防止超范围
+  }
+  int trigger = 50;
+  if (sig >= 400 && sig - 400 > trigger ){
+    //si = sig - 400;
+    int sig_delta = sig - 400;
+    si = map(sig_delta, 0, 200, 0, NUMPIXELS-2);//最高点留给掉落点,最大值30
+    //Serial.printf("up %d\n",sig - 400);
+  }else if(sig <= 400 && 400 - sig > trigger){
+    int sig_delta = 400 - sig;
+    si = map(sig_delta, 0, 200, 0, NUMPIXELS-2);//最高点留给掉落点,最大值30
+    //Serial.printf("down %d\n",400 - sig);
+  }else{
+    si = 0;  
+  }
+
+  if(si > 0)
+  { 
+    Serial.println(si);
+    if(si > NUMPIXELS -2) si = NUMPIXELS-2;
+    
+    //int si = map(sig, g_trigger_level , sig_max, 0, NUMPIXELS-2);//最高点留给掉落点,最大值30
+    if(si > pre_si){//音量更大
+      
+      int j = 0;
+
+      if(si > drop_dot){ //如果这次音量最大值没有达到上次掉落的最小值，就不管它，继续掉落，反之，重新上升掉落点
+
+        drop_dot = si+1;//掉落点要高于本次音量
+ 
+        //if(millis() - drop_time > 300)//掉落间隔
+        { 
+          //Serial.printf("si  %d\n", si); 
+          Serial.printf("drop_dot %d\n", drop_dot); 
+          if(pre_drop_dot != drop_dot){
+            fill_solid(leds + pre_drop_dot, 1, CHSV(drop_dot_color, 255, 0));
+          }
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
+          FastLED.show();
+          //drop_time = millis();
+        }        
+      }
+      if(si == drop_dot){ 
+          si--;//不能覆盖了掉落点
+          //Serial.printf("drop_dot = si %d\n", drop_dot); 
+      }
+      for(j = pre_si; j <= si; j++){
+        //if(j < si)
+        {          
+          fill_solid(leds + j, 1, CHSV((g_color+j * color_delta)%255, 255, (NUMPIXELS-j) * brightness_delta));        
+          //fill_solid(leds + j, 1, CHSV(j * delta, 255, maxBrightness));
+          
+        }
+      }
+      FastLED.show();          
+      delay(5);    
+      pre_si = si;  
+    }else{//音量变小
+      for(int j = pre_si; j >= si && j > 0; j--){
+        fill_solid(leds + j, 1, CHSV(j * delta, 255, 0));
+        FastLED.show();
+        delay(10);
+      }
+      pre_si = si; 
+    }
+  }
+  
+  {//一直掉落
+      //for(int i = 0;drop_dot >= si; i ++)
+      unsigned long interval = map(pre_si - si, 0, 31, 800, 5);//取5-100ms的掉落速度，两次音量落差越大，降速越快
+      //Serial.printf("time %ld,%ld\n",millis(),drop_time); 
+      if(millis() - drop_time > 200)//掉落间隔
+      {        
+        if(drop_dot>0)
+        {
+          fill_solid(leds + drop_dot--, 1, CHSV(130, 255, 0));
+          fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
+          FastLED.show();
+          //Serial.printf("drop_dot %d\n", drop_dot); 
+        }
+        //Serial.printf("drop_dot %d\n",drop_dot); 
+        pre_drop_dot = drop_dot;
+        drop_time = millis();
+      }
+  }
+  delay(5);          
 }
 
 
@@ -460,30 +544,35 @@ void music_extend(){
   { 
     //Serial.println(sig);
     int si = map(sig, g_trigger_level, sig_max, 0, NUMPIXELS/2);
-    Serial.printf("si %d\n", si); 
+    //Serial.printf("si %d\n", si); 
     if(si > pre_si){//音量更大 
       int m = si;
-      for(int j = NUMPIXELS/2; m >= 0 && j >=0; j--, m--){
-          fill_solid(leds + j, 1, CHSV((g_color+j * delta)%255, 255, (j+1) *2 * brightness_delta));//15 14 13
-          fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * delta)%255, 255, j* 2 * brightness_delta));//15 16 17
-          FastLED.show();          
-          delay(10);
+      for(int j = NUMPIXELS/2-1; m >= 0 && j >=0; j--, m--){
+          Serial.printf("si %d\n", j); 
+          if(j == 0){
+            fill_solid(leds + j, 1, CHSV(delta%255, 255, brightness_delta)); 
+            fill_solid(leds + NUMPIXELS-1 - j, 1, CHSV(delta%255, 255, brightness_delta));//17 18
+          }
+          else{
+            fill_solid(leds + j, 1, CHSV((g_color+j * delta)%255, 255, j*2 * brightness_delta));//16 15 14 13
+            fill_solid(leds + NUMPIXELS-1 - j, 1, CHSV((g_color+j * delta)%255, 255, j* 2 * brightness_delta));//17 18
+          }
       }
-   
+      FastLED.show();          
+      delay(10);
       pre_si = si;  
       last_drop_time = millis();
     }
     //else
     {// 不管音量变不变，都继续掉落
 #if 1      
-      for(int j = NUMPIXELS/2 - pre_si; j < NUMPIXELS/2-si; j++){
+      for(int j = NUMPIXELS/2-1 - pre_si; j < NUMPIXELS/2 -1 -si; j++){
         
         fill_solid(leds + j, 1, CHSV(j * delta, 255, 0));
-        fill_solid(leds + NUMPIXELS - j, 1, CHSV(j * delta, 255, 0));
-        FastLED.show();
-        delay(10);
+        fill_solid(leds + NUMPIXELS-1 - j, 1, CHSV(j * delta, 255, 0));
       }
-//      last_drop_dot = j-1;
+      FastLED.show();
+      delay(10);
 #endif      
       pre_si = si; 
       last_drop_time = millis();
@@ -491,12 +580,12 @@ void music_extend(){
   }
   //长时间没动静，就关掉所有LED
   if(millis()- last_drop_time > 500){
-    for(int j = 0; j < NUMPIXELS/2; j++){    
+    for(int j = 0; j <= NUMPIXELS/2-1; j++){    
       fill_solid(leds + j, 1, CHSV(j * delta, 255, 0));
-      fill_solid(leds + NUMPIXELS - j, 1, CHSV(j * delta, 255, 0));
-      FastLED.show();
-      delay(20);
+      fill_solid(leds + NUMPIXELS-1 - j, 1, CHSV(j * delta, 255, 0));
     }  
+    FastLED.show();
+    delay(20);
     last_drop_time = millis();
   }
   //delay(5);       
@@ -522,17 +611,17 @@ void music_gathered(){
   if (sig >= g_trigger_level)
   { 
     //Serial.println(sig);
-    int si = map(sig, g_trigger_level, sig_max, 0, NUMPIXELS/2);
+    int si = map(sig, g_trigger_level, sig_max, 0, NUMPIXELS/2-1);//15
     Serial.printf("si %d\n", si); 
     if(si > pre_si){//音量更大
       int m = si;
       for(int j = 0; j <= si; j++){        
           fill_solid(leds + j, 1, CHSV((g_color+j * color_delta), 255, (NUMPIXELS - j)* brightness_delta));
-          fill_solid(leds + NUMPIXELS - j, 1, CHSV((g_color+j * color_delta), 255, (NUMPIXELS - j) * brightness_delta));
-          FastLED.show();          
-          delay(10);
+          fill_solid(leds + NUMPIXELS-1 - j, 1, CHSV((g_color+j * color_delta), 255, (NUMPIXELS - j) * brightness_delta));
+        FastLED.show();          
+        delay(10);
       }
-   
+
       pre_si = si;  
       last_drop_time = millis();
     }else{//音量变小
@@ -540,11 +629,10 @@ void music_gathered(){
       for(int j = pre_si; j >= 0; j--){
         
         fill_solid(leds + j, 1, CHSV(j * delta, 255, 0));
-        fill_solid(leds + NUMPIXELS - j, 1, CHSV(j * delta, 255, 0));
+        fill_solid(leds + NUMPIXELS-1 - j, 1, CHSV(j * delta, 255, 0));
         FastLED.show();
         delay(10);
       }
-//      last_drop_dot = j-1;
 #endif      
       pre_si = si; 
       last_drop_time = millis();
@@ -554,9 +642,9 @@ void music_gathered(){
   if(millis()- last_drop_time > 200){
     for(int j = 0; j < NUMPIXELS/2; j++){    
       fill_solid(leds + j, 1, CHSV(j * delta, 255, 0));
-      fill_solid(leds + NUMPIXELS - j, 1, CHSV(j * delta, 255, 0));
+      fill_solid(leds + NUMPIXELS-11 - j, 1, CHSV(j * delta, 255, 0));
       FastLED.show();
-      delay(10);
+      delay(20);
     }  
     last_drop_time = millis();
   }
@@ -600,27 +688,7 @@ void music_drop(){
           fill_solid(leds + drop_dot, 1, CHSV(drop_dot_color, 255, maxBrightness));
           FastLED.show();
           //drop_time = millis();
-        }
-        
-#if 0        
-        for(int i = 0;i < 1; i ++){
-          
-          drop_dot ++;
-          if(pre_drop_dot){
-              //pixels.setPixelColor(pre_drop_dot, pixels.Color(0, 0, 0));
-              //Serial.printf("pre_drop %d", pre_drop_dot); 
-              fill_solid(leds + pre_drop_dot, 1, CHSV(130, 255, 0));
-              //FastLED.show();
-            }
-          
-          fill_solid(leds + drop_dot, 1, CHSV(130, 255, maxBrightness/(2-i)));
-          FastLED.show();
-          //pixels.setPixelColor(drop_dot, pixels.Color(255, 0, 0));
-          //pixels.show();
-          pre_drop_dot = drop_dot;         
-          delay(10);
-        }
-#endif
+        }        
       }
       if(si == drop_dot){ 
           si--;//不能覆盖了掉落点
@@ -631,10 +699,11 @@ void music_drop(){
         {          
           fill_solid(leds + j, 1, CHSV((g_color+j * color_delta)%255, 255, (NUMPIXELS-j) * brightness_delta));        
           //fill_solid(leds + j, 1, CHSV(j * delta, 255, maxBrightness));
-          FastLED.show();          
-          delay(5);
+          
         }
-      }      
+      }
+      FastLED.show();          
+      delay(5);    
       pre_si = si;  
     }else{//音量变小
       for(int j = pre_si; j >= si && j > 0; j--){
@@ -808,7 +877,7 @@ void music_RGB_drop(){
   if (sig >= g_trigger_level)
   { 
     //Serial.println(sig);
-    int si = map(sig, g_trigger_level, sig_max, 0, NUMPIXELS-2);//最高点留给掉落点,最大值28
+    int si = map(sig, g_trigger_level, sig_max, 0, NUMPIXELS-2);//最高点留给掉落点,最大值30
     if(si > pre_si){//音量更大
       
       int j = 0;

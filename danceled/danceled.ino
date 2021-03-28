@@ -70,7 +70,10 @@ void loop()
         music_dot_dance();
         break;  
     case 12:
-      led_test();      
+       led_test();      
+       break;
+    case 13:
+      music_drop_pro();  
       break;
       
     default:

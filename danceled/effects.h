@@ -31,7 +31,7 @@ void music_double_drop();
 void music_extend();
 
 void music_gathered();
-
+void music_gathered_debug();
 void music_up_down();
 
 void music_fade();

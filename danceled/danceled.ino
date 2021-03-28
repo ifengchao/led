@@ -49,7 +49,7 @@ void loop()
         music_RGB_drop();
         break;
     case 5:
-        music_gathered();
+        music_gathered_debug();
         break;
     case 6:
         music_up_down();

@@ -632,7 +632,7 @@ void music_drop(){
           fill_solid(leds + j, 1, CHSV((g_color+j * color_delta)%255, 255, (NUMPIXELS-j) * brightness_delta));        
           //fill_solid(leds + j, 1, CHSV(j * delta, 255, maxBrightness));
           FastLED.show();          
-          delay(5);
+          delay(10);
         }
       }      
       pre_si = si;  
@@ -640,7 +640,7 @@ void music_drop(){
       for(int j = pre_si; j >= si && j > 0; j--){
         fill_solid(leds + j, 1, CHSV(j * delta, 255, 0));
         FastLED.show();
-        delay(10);
+        delay(20);
       }
       pre_si = si; 
     }
@@ -650,7 +650,7 @@ void music_drop(){
       //for(int i = 0;drop_dot >= si; i ++)
       unsigned long interval = map(pre_si - si, 0, 31, 800, 5);//取5-100ms的掉落速度，两次音量落差越大，降速越快
       Serial.printf("time %ld,%ld\n",millis(),drop_time); 
-      if(millis() - drop_time > 200)//掉落间隔
+      if(millis() - drop_time > 50)//掉落间隔
       {        
         if(drop_dot>0)
         {

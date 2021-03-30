@@ -2,7 +2,7 @@
 #include <FastLED.h>
 #include <Arduino.h>
 
-#define LED_PIN    2   //灯带信号--引脚6
+#define LED_PIN    5   //灯带信号--引脚6
 #define MIC_PIN    A0  //MAX9814 OUT引脚
 #define NUMPIXELS 32
 //灯数
